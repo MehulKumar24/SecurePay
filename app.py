@@ -15,26 +15,92 @@ st.set_page_config(
 st.markdown("""
 <style>
 
-.main-title {
-    font-size: 36px;
-    font-weight: 700;
-    color: #2F80ED;
-    text-align: center;
-    margin-bottom: 0px;
+/* -------- GLOBAL -------- */
+html, body, [class*="css"]  {
+    background-color: #0b0f1a;
+    color: #e6edf3;
+    font-family: "Segoe UI", Roboto, sans-serif;
 }
 
-.sub-title {
-    font-size: 16px;
+/* -------- MAIN TITLE -------- */
+.title {
+    font-size: 38px;
+    font-weight: 600;
+    text-align: center;
+    margin-top: 10px;
+    margin-bottom: 4px;
+}
+
+.blue {
+    color: #3b82f6;
+}
+
+.subtitle {
+    text-align: center;
     color: #9aa4b2;
-    text-align: center;
-    margin-bottom: 25px;
+    font-size: 15px;
+    margin-bottom: 28px;
 }
 
-.metric-box {
-    background-color: #111827;
-    padding: 15px;
+/* -------- FILE UPLOADER (CENTER CARD STYLE) -------- */
+[data-testid="stFileUploader"] {
+    background: #111827;
+    border: 1px solid #1f2937;
+    border-radius: 12px;
+    padding: 30px;
+    width: 60%;
+    margin: auto;
+    box-shadow: 0 0 0 1px rgba(59,130,246,0.05);
+}
+
+/* Upload text */
+[data-testid="stFileUploader"] label {
+    color: #cbd5e1;
+    font-size: 16px;
+}
+
+/* Browse button */
+button[kind="secondary"] {
+    background-color: #1f2937 !important;
+    color: #e5e7eb !important;
+    border-radius: 8px !important;
+    border: 1px solid #374151 !important;
+}
+
+button[kind="secondary"]:hover {
+    border: 1px solid #3b82f6 !important;
+    color: #3b82f6 !important;
+}
+
+/* -------- METRICS -------- */
+[data-testid="stMetric"] {
+    background: #111827;
     border-radius: 10px;
+    padding: 14px;
+    border: 1px solid #1f2937;
+}
+
+/* -------- TABLE -------- */
+[data-testid="stDataFrame"] {
+    border-radius: 10px;
+    border: 1px solid #1f2937;
+}
+
+/* -------- FOOTER -------- */
+.footer {
     text-align: center;
+    color: #6b7280;
+    font-size: 13px;
+    margin-top: 18px;
+}
+
+/* -------- SCROLLBAR -------- */
+::-webkit-scrollbar {
+    width: 8px;
+}
+::-webkit-scrollbar-thumb {
+    background: #1f2937;
+    border-radius: 8px;
 }
 
 </style>
