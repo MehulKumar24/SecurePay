@@ -1,131 +1,147 @@
 import streamlit as st
 import pandas as pd
-import numpy as np
 from sklearn.ensemble import IsolationForest
 from sklearn.preprocessing import StandardScaler
 import plotly.express as px
+import numpy as np
 
 st.set_page_config(page_title="SecurePay", layout="wide")
 
-# =========================
+st.markdown("""
+<style>
+.title {font-size:34px;font-weight:600;margin-bottom:5px;}
+.subtitle {color:#9aa0a6;margin-bottom:18px;}
+.block {background:#0f1116;padding:14px;border-radius:10px;}
+.footer {text-align:center;color:#9aa0a6;font-size:13px;margin-top:20px;}
+</style>
+""", unsafe_allow_html=True)
+
 # Sidebar
-# =========================
-st.sidebar.title("SecurePay")
-st.sidebar.write("AI-based Transaction Anomaly Detection")
+with st.sidebar:
+    st.title("SecurePay")
+    st.caption("Financial Behaviour Intelligence")
 
-st.sidebar.markdown("### About")
-st.sidebar.write(
-    "Upload a transaction dataset to detect suspicious or anomalous financial behaviour using Isolation Forest."
-)
+    st.markdown("**Overview**")
+    st.write(
+        "SecurePay analyses behavioural transaction patterns to identify abnormal or suspicious financial activity."
+    )
 
-st.sidebar.markdown("### Expected Columns")
-st.sidebar.code("""
-amount
-amount_deviation
-txn_velocity
-behaviour_score
-""")
+    st.markdown("**Capabilities**")
+    st.write(
+        "- Behaviour anomaly detection\n"
+        "- Risk pattern discovery\n"
+        "- Transaction irregularity monitoring"
+    )
 
-# =========================
+    st.markdown("**Detection Control**")
+    st.slider("Sensitivity (visual)", 1, 10, 5)
+
+    st.markdown("---")
+    st.write("SecurePay • 2026")
+    st.write("Author: Mehul Kumar")
+
 # Header
-# =========================
-st.title("🔍 SecurePay — Anomaly Detection System")
-st.write("Upload your dataset and detect suspicious financial transactions.")
+st.markdown('<div class="title">SecurePay — Suspicious Transaction Detection</div>', unsafe_allow_html=True)
+st.markdown('<div class="subtitle">Upload dataset to analyse behavioural transaction anomalies</div>', unsafe_allow_html=True)
 
-# =========================
-# Upload
-# =========================
 file = st.file_uploader("Upload CSV file", type=["csv"])
 
 if file is not None:
-    df = pd.read_csv(file)
+    with st.spinner("Processing dataset..."):
+        df = pd.read_csv(file)
 
-    st.subheader("Dataset Preview")
-    st.dataframe(df.head())
+        required_cols = ["amount", "amount_deviation", "txn_velocity", "behaviour_score"]
+        if not all(col in df.columns for col in required_cols):
+            st.error("Dataset missing required columns.")
+            st.stop()
 
-    required_cols = ["amount", "amount_deviation", "txn_velocity", "behaviour_score"]
+        X = df[required_cols].copy()
+        scaler = StandardScaler()
+        X_scaled = scaler.fit_transform(X)
 
-    # =========================
-    # Validate Columns
-    # =========================
-    if not all(col in df.columns for col in required_cols):
-        st.error("Dataset must contain required columns.")
-        st.stop()
+        model = IsolationForest(n_estimators=100, contamination="auto", random_state=42)
+        model.fit(X_scaled)
 
-    # =========================
-    # Feature Preparation
-    # =========================
-    X = df[required_cols].copy()
+        df["anomaly_flag"] = model.predict(X_scaled)
+        df["anomaly_flag"] = df["anomaly_flag"].apply(lambda x: 1 if x == -1 else 0)
 
-    scaler = StandardScaler()
-    X_scaled = scaler.fit_transform(X)
-
-    # =========================
-    # Isolation Forest
-    # =========================
-    model = IsolationForest(
-        n_estimators=100,
-        contamination="auto",   # FIXED
-        random_state=42
-    )
-
-    model.fit(X_scaled)
-
-    df["anomaly"] = model.predict(X_scaled)
-    df["anomaly"] = df["anomaly"].apply(lambda x: 1 if x == -1 else 0)
-
-    # =========================
     # Metrics
-    # =========================
-    anomaly_count = df["anomaly"].sum()
     total = len(df)
-    rate = (anomaly_count / total) * 100
+    anomalies = int(df["anomaly_flag"].sum())
+    rate = (anomalies / total) * 100
 
-    col1, col2, col3 = st.columns(3)
+    c1, c2, c3 = st.columns(3)
+    c1.metric("Total Transactions", f"{total:,}")
+    c2.metric("Suspicious Detected", anomalies)
+    c3.metric("Anomaly Rate", f"{rate:.2f}%")
 
-    col1.metric("Total Transactions", total)
-    col2.metric("Detected Anomalies", anomaly_count)
-    col3.metric("Anomaly Rate (%)", f"{rate:.2f}")
+    st.markdown("---")
 
-    # =========================
-    # Suspicious Transactions
-    # =========================
-    st.subheader("⚠ Detected Suspicious Transactions")
-    suspicious = df[df["anomaly"] == 1]
+    # Preview
+    st.subheader("Dataset Preview")
+    st.dataframe(df.head(), use_container_width=True)
+
+    st.markdown("---")
+
+    # Suspicious transactions
+    st.subheader("Detected Suspicious Transactions")
+    suspicious = df[df["anomaly_flag"] == 1]
 
     if len(suspicious) > 0:
-        st.dataframe(suspicious.head(200))
+        st.dataframe(suspicious.head(300), use_container_width=True)
+
+        csv = suspicious.to_csv(index=False).encode("utf-8")
+        st.download_button(
+            "Download Suspicious Transactions",
+            csv,
+            "suspicious_transactions.csv",
+            "text/csv"
+        )
     else:
-        st.success("No suspicious transactions detected.")
+        st.success("No suspicious behaviour detected.")
 
-    # =========================
-    # Distribution Chart
-    # =========================
+    st.markdown("---")
+
+    # Distribution chart
     st.subheader("Anomaly Distribution")
+    fig1 = px.histogram(df, x="anomaly_flag", nbins=2)
+    st.plotly_chart(fig1, use_container_width=True)
 
-    fig = px.histogram(df, x="anomaly", nbins=2)
-    st.plotly_chart(fig, use_container_width=True)
+    st.markdown("---")
 
-    # =========================
-    # Scatter Behaviour Map
-    # =========================
+    # Behaviour scatter
     st.subheader("Behaviour Analysis")
 
+    sample_df = df.sample(min(5000, len(df)))
     fig2 = px.scatter(
-        df.sample(min(5000, len(df))),
+        sample_df,
         x="amount_deviation",
         y="txn_velocity",
-        color="anomaly",
-        title="Deviation vs Velocity"
+        color="anomaly_flag",
+        opacity=0.7
     )
-
     st.plotly_chart(fig2, use_container_width=True)
 
-else:
-    st.info("Upload a CSV file to begin anomaly detection.")
+    st.markdown("---")
 
-# =========================
+    # Top risk transactions
+    st.subheader("Top Risk Transactions")
+
+    df["risk_score"] = (
+        (df["amount_deviation"] * 0.5) +
+        (df["txn_velocity"] * 0.3) +
+        (df["behaviour_score"] * 0.2)
+    )
+
+    top_risk = df.sort_values("risk_score", ascending=False).head(20)
+    st.dataframe(top_risk, use_container_width=True)
+
+else:
+    st.info("Upload a CSV file to begin analysis.")
+
 # Footer
-# =========================
 st.markdown("---")
-st.markdown("© 2026 SecurePay | Financial Anomaly Detection Prototype")
+st.markdown(
+    '<div class="footer">© 2026 SecurePay — Intelligent Financial Anomaly Detection • Developed by Mehul Kumar</div>',
+    unsafe_allow_html=True
+)
