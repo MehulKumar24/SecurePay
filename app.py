@@ -182,7 +182,11 @@ if uploaded_file is not None:
     
     dq_col1, dq_col2, dq_col3, dq_col4 = st.columns(4)
     dq_col1.metric("Quality Score", f"{data_quality['quality_score']:.1f}/100")
-    dq_col2.metric("Missing Values", sum(v['count'] for v in data_quality.get('missing_data', {}).values()))
+    # Calculate total missing values (sum of all missing cells)
+    missing_counts = [v['count'] for v in data_quality.get('missing_data', {}).values()]
+    total_missing = sum(missing_counts)
+    st.write(f"[DEBUG] Missing counts per column: {missing_counts}, total missing: {total_missing}")
+    dq_col2.metric("Missing Values", total_missing)
     dq_col3.metric("Duplicates", data_quality['duplicates'])
     dq_col4.metric("Memory (MB)", f"{data_quality['memory_usage_mb']:.2f}")
 
