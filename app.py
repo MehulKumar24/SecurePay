@@ -3,7 +3,6 @@ import pandas as pd
 from sklearn.ensemble import IsolationForest
 from sklearn.preprocessing import StandardScaler
 import plotly.express as px
-import numpy as np
 
 st.set_page_config(page_title="SecurePay", layout="wide")
 
@@ -41,16 +40,23 @@ if file is not None:
     with st.spinner("Processing dataset..."):
         df = pd.read_csv(file)
 
-        # Auto-fix column formatting (lowercase + remove spaces)
+        # Normalize column names
         df.columns = df.columns.str.strip().str.lower()
 
-        required_cols = ["amount", "amount_deviation", "txn_velocity", "behaviour_score"]
+        required_cols = [
+            "txn_amount",
+            "amount_deviation",
+            "txn_velocity",
+            "behavior_score"
+        ]
 
-        if not all(col in df.columns for col in required_cols):
-            st.error("Dataset missing required columns.")
+        missing = [c for c in required_cols if c not in df.columns]
+        if missing:
+            st.error(f"Missing required columns: {missing}")
             st.stop()
 
         X = df[required_cols].copy()
+
         scaler = StandardScaler()
         X_scaled = scaler.fit_transform(X)
 
@@ -60,6 +66,7 @@ if file is not None:
         df["anomaly_flag"] = model.predict(X_scaled)
         df["anomaly_flag"] = df["anomaly_flag"].apply(lambda x: 1 if x == -1 else 0)
 
+    # Metrics
     total = len(df)
     anomalies = int(df["anomaly_flag"].sum())
     rate = (anomalies / total) * 100
@@ -71,11 +78,13 @@ if file is not None:
 
     st.markdown("---")
 
+    # Preview
     st.subheader("Dataset Preview")
     st.dataframe(df.head(), use_container_width=True)
 
     st.markdown("---")
 
+    # Suspicious transactions
     st.subheader("Detected Suspicious Transactions")
     suspicious = df[df["anomaly_flag"] == 1]
 
@@ -89,16 +98,38 @@ if file is not None:
 
     st.markdown("---")
 
+    # Distribution
     st.subheader("Anomaly Distribution")
     fig1 = px.histogram(df, x="anomaly_flag", nbins=2)
     st.plotly_chart(fig1, use_container_width=True)
 
     st.markdown("---")
 
+    # Scatter
     st.subheader("Behaviour Analysis")
     sample_df = df.sample(min(5000, len(df)))
-    fig2 = px.scatter(sample_df, x="amount_deviation", y="txn_velocity", color="anomaly_flag", opacity=0.7)
+    fig2 = px.scatter(
+        sample_df,
+        x="amount_deviation",
+        y="txn_velocity",
+        color="anomaly_flag",
+        opacity=0.7
+    )
     st.plotly_chart(fig2, use_container_width=True)
+
+    st.markdown("---")
+
+    # Risk score
+    st.subheader("Top Risk Transactions")
+
+    df["risk_score"] = (
+        (df["amount_deviation"] * 0.5) +
+        (df["txn_velocity"] * 0.3) +
+        (df["behavior_score"] * 0.2)
+    )
+
+    top_risk = df.sort_values("risk_score", ascending=False).head(20)
+    st.dataframe(top_risk, use_container_width=True)
 
 else:
     st.info("Upload a CSV file to begin analysis.")
