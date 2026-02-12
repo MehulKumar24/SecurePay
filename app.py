@@ -255,9 +255,9 @@ if uploaded_file is not None:
     if 'anomaly_score' in df.columns:
         df['risk_level'] = pd.cut(
             df['anomaly_score'],
-            bins=[0, 0.33, 0.67, 1.0],
+            bins=[-float("inf"), 0.3, 0.6, float("inf")],
             labels=['Low', 'Medium', 'High'],
-            inclusive='left'
+            right=False
         )
     else:
         df['risk_level'] = df['anomaly'].apply(lambda x: 'High' if x == 1 else 'Low')
