@@ -62,7 +62,7 @@ class ReportGenerator:
                 </div>
                 <div class="metric">
                     <div>Anomaly Rate</div>
-                    <div class="metric-value">{(len(anomalies)/len(df)*100):.2f}%</div>
+                    <div class="metric-value">{(len(anomalies)/len(df)*100 if len(df) > 0 else 0):.2f}%</div>
                 </div>
             </div>
             

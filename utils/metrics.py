@@ -50,6 +50,13 @@ class ModelMetricsCalculator:
     def calculate_confidence_intervals(predictions, confidence=0.95):
         """Calculate confidence intervals for predictions"""
         n = len(predictions)
+        if n == 0:
+            return {
+                'mean': 0.0,
+                'lower_bound': 0.0,
+                'upper_bound': 0.0,
+                'std_error': 0.0
+            }
         mean = np.mean(predictions)
         std_err = np.std(predictions) / np.sqrt(n)
         margin = 1.96 * std_err if confidence == 0.95 else 2.576 * std_err
@@ -58,7 +65,8 @@ class ModelMetricsCalculator:
             'mean': float(mean),
             'lower_bound': float(mean - margin),
             'upper_bound': float(mean + margin),
-            'margin_of_error': float(margin)
+            'margin_of_error': float(margin),
+            'std_error': float(std_err)
         }
     
     @staticmethod

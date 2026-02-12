@@ -182,7 +182,7 @@ if uploaded_file is not None:
     
     dq_col1, dq_col2, dq_col3, dq_col4 = st.columns(4)
     dq_col1.metric("Quality Score", f"{data_quality['quality_score']:.1f}/100")
-    dq_col2.metric("Missing Values", data_quality['total_rows'])
+    dq_col2.metric("Missing Values", sum(v['count'] for v in data_quality.get('missing_data', {}).values()))
     dq_col3.metric("Duplicates", data_quality['duplicates'])
     dq_col4.metric("Memory (MB)", f"{data_quality['memory_usage_mb']:.2f}")
 
@@ -336,7 +336,7 @@ if uploaded_file is not None:
         }).round(3)
         
         channel_stats.columns = ['Anomalies', 'Total', 'Avg_Amount']
-        channel_stats['Anomaly_Rate'] = (channel_stats['Anomalies'] / channel_stats['Total'] * 100).round(2)
+        channel_stats['Anomaly_Rate'] = (channel_stats['Anomalies'] / channel_stats['Total'].replace(0, np.nan) * 100).fillna(0).round(2)
         
         st.dataframe(channel_stats, use_container_width=True)
         

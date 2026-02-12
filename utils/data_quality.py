@@ -27,7 +27,7 @@ class DataQualityValidator:
         # Check missing data
         for col in df.columns:
             missing_count = df[col].isnull().sum()
-            missing_pct = (missing_count / len(df)) * 100
+            missing_pct = (missing_count / len(df)) * 100 if len(df) > 0 else 0.0
             assessment['missing_data'][col] = {
                 'count': int(missing_count),
                 'percentage': float(missing_pct)
