@@ -26,7 +26,7 @@ with st.sidebar:
     st.markdown("---")
     st.write("SecurePay • 2026")
 
-# ---------------- CSS (Dark + Responsive) ----------------
+# ---------------- CSS ----------------
 st.markdown("""
 <style>
 html, body, [class*="css"] {
@@ -42,7 +42,6 @@ html, body, [class*="css"] {
     font-weight: 600;
     text-align: center;
     color: #3b82f6;
-    margin-top: 10px;
 }
 .subtitle {
     text-align: center;
@@ -65,23 +64,18 @@ if file is not None:
     df.columns = df.columns.str.strip().str.lower()
 
     required_cols = ["txn_amount", "amount_deviation", "txn_velocity", "behavior_score"]
-
     if any(col not in df.columns for col in required_cols):
         st.error("Dataset must contain: txn_amount, amount_deviation, txn_velocity, behavior_score")
         st.stop()
 
-    # Preserve raw deviation
     df["raw_amount_deviation"] = pd.to_numeric(df["amount_deviation"], errors="coerce")
 
-    # Safe numeric conversion
     X = df[required_cols].apply(pd.to_numeric, errors="coerce")
     X = X.fillna(X.median())
 
-    # ---------------- SCALING ----------------
     scaler = StandardScaler()
     X_scaled = scaler.fit_transform(X)
 
-    # ---------------- MODEL ----------------
     model = IsolationForest(
         n_estimators=250,
         contamination="auto",
@@ -93,7 +87,7 @@ if file is not None:
     df["anomaly_flag"] = (model.predict(X_scaled) == -1).astype(int)
     df["anomaly_score"] = model.decision_function(X_scaled)
 
-    # ---------------- REAL BANK FILTER ----------------
+    # -------- REAL-BANK FILTER --------
     dev_thresh = df["raw_amount_deviation"].quantile(0.95)
     vel_thresh = df["txn_velocity"].quantile(0.90)
     beh_thresh = 0.40
@@ -105,7 +99,7 @@ if file is not None:
         (df["behavior_score"] <= beh_thresh)
     ).astype(int)
 
-    # ---------------- SEVERITY ----------------
+    # -------- SEVERITY --------
     def severity(score):
         if score < -0.25:
             return "High"
@@ -116,17 +110,30 @@ if file is not None:
 
     df["severity"] = df["anomaly_score"].apply(severity)
 
-    # ---------------- RISK SCORE ----------------
+    # -------- RISK SCORE --------
     df["risk_score"] = (
         (df["raw_amount_deviation"] * 0.45) +
         (df["txn_velocity"] * 0.35) +
         ((1 - df["behavior_score"]) * 0.20)
     )
 
-    # ---------------- METRICS ----------------
+    # -------- WHY FLAGGED (Explainability) --------
+    def reason(row):
+        r = []
+        if row["raw_amount_deviation"] >= dev_thresh:
+            r.append("High Deviation")
+        if row["txn_velocity"] >= vel_thresh:
+            r.append("High Velocity")
+        if row["behavior_score"] <= beh_thresh:
+            r.append("Abnormal Behaviour")
+        return ", ".join(r)
+
+    df["flag_reason"] = df.apply(reason, axis=1)
+
+    # -------- METRICS --------
     total = len(df)
     anomalies = int(df["real_anomaly"].sum())
-    rate = (anomalies / total) * 100 if total > 0 else 0
+    rate = (anomalies / total) * 100 if total else 0
 
     st.markdown("---")
     c1, c2, c3 = st.columns(3)
@@ -134,12 +141,12 @@ if file is not None:
     c2.metric("Real Suspicious Detected", anomalies)
     c3.metric("Anomaly Rate", f"{rate:.2f}%")
 
-    # ---------------- PREVIEW ----------------
+    # -------- PREVIEW --------
     st.markdown("---")
     st.subheader("Dataset Preview")
     st.dataframe(df.head(), use_container_width=True)
 
-    # ---------------- SUSPICIOUS ----------------
+    # -------- SUSPICIOUS --------
     st.markdown("---")
     st.subheader("Real Suspicious Transactions")
 
@@ -157,7 +164,7 @@ if file is not None:
     else:
         st.success("No strong anomalies detected (real-world filtering applied).")
 
-    # ---------------- VISUAL ----------------
+    # -------- VISUAL --------
     st.markdown("---")
     st.subheader("Anomaly Distribution")
     fig1 = px.histogram(df, x="real_anomaly", template="plotly_dark")
@@ -176,9 +183,9 @@ if file is not None:
     )
     st.plotly_chart(fig2, use_container_width=True)
 
-    # ---------------- TOP RISK ----------------
+    # -------- TOP RISK (FIXED: HIGH → LOW) --------
     st.markdown("---")
-    st.subheader("Top Risk Transactions")
+    st.subheader("Top Risk Transactions (High → Low)")
     top_risk = df.sort_values("risk_score", ascending=False).head(20)
     st.dataframe(top_risk, use_container_width=True)
 
