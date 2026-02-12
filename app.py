@@ -1,123 +1,131 @@
 import streamlit as st
 import pandas as pd
+import numpy as np
 from sklearn.ensemble import IsolationForest
-import matplotlib.pyplot as plt
+from sklearn.preprocessing import StandardScaler
+import plotly.express as px
 
-# ---------------- PAGE CONFIG ----------------
-st.set_page_config(
-    page_title="SecurePay",
-    layout="wide"
+st.set_page_config(page_title="SecurePay", layout="wide")
+
+# =========================
+# Sidebar
+# =========================
+st.sidebar.title("SecurePay")
+st.sidebar.write("AI-based Transaction Anomaly Detection")
+
+st.sidebar.markdown("### About")
+st.sidebar.write(
+    "Upload a transaction dataset to detect suspicious or anomalous financial behaviour using Isolation Forest."
 )
 
-# ---------------- CUSTOM CSS ----------------
-st.markdown("""
-<style>
-body {
-    background-color: #0e1117;
-}
-.big-title {
-    text-align: center;
-    font-size: 42px;
-    font-weight: bold;
-    color: #4da6ff;
-}
-.subtitle {
-    text-align: center;
-    color: #b0b3b8;
-    margin-bottom: 25px;
-}
-.metric-card {
-    background: #161b22;
-    padding: 15px;
-    border-radius: 10px;
-    text-align: center;
-    box-shadow: 0px 0px 8px rgba(0,0,0,0.3);
-}
-.footer {
-    text-align: center;
-    color: #8b949e;
-    margin-top: 40px;
-    font-size: 13px;
-}
-</style>
-""", unsafe_allow_html=True)
+st.sidebar.markdown("### Expected Columns")
+st.sidebar.code("""
+amount
+amount_deviation
+txn_velocity
+behaviour_score
+""")
 
-# ---------------- HEADER ----------------
-st.markdown("<div class='big-title'>SecurePay</div>", unsafe_allow_html=True)
-st.markdown("<div class='subtitle'>Intelligent Financial Anomaly Detection System</div>", unsafe_allow_html=True)
-st.markdown("---")
+# =========================
+# Header
+# =========================
+st.title("🔍 SecurePay — Anomaly Detection System")
+st.write("Upload your dataset and detect suspicious financial transactions.")
 
-# ---------------- FILE UPLOAD ----------------
-st.subheader("Upload Transaction Dataset")
-uploaded_file = st.file_uploader("Upload CSV file", type=["csv"])
+# =========================
+# Upload
+# =========================
+file = st.file_uploader("Upload CSV file", type=["csv"])
 
-# ---------------- MAIN ----------------
-if uploaded_file is not None:
+if file is not None:
+    df = pd.read_csv(file)
 
-    df = pd.read_csv(uploaded_file)
+    st.subheader("Dataset Preview")
+    st.dataframe(df.head())
 
-    features = [
-        'txn_hour',
-        'txn_amount',
-        'amount_deviation',
-        'txn_velocity',
-        'behavior_score'
-    ]
+    required_cols = ["amount", "amount_deviation", "txn_velocity", "behaviour_score"]
 
-    if not all(col in df.columns for col in features):
-        st.error("Dataset missing required columns.")
+    # =========================
+    # Validate Columns
+    # =========================
+    if not all(col in df.columns for col in required_cols):
+        st.error("Dataset must contain required columns.")
         st.stop()
 
-    X = df[features]
+    # =========================
+    # Feature Preparation
+    # =========================
+    X = df[required_cols].copy()
 
+    scaler = StandardScaler()
+    X_scaled = scaler.fit_transform(X)
+
+    # =========================
+    # Isolation Forest
+    # =========================
     model = IsolationForest(
         n_estimators=100,
-        contamination=auto,
+        contamination="auto",   # FIXED
         random_state=42
     )
 
-    model.fit(X)
+    model.fit(X_scaled)
 
-    df['anomaly'] = model.predict(X)
-    df['anomaly'] = df['anomaly'].map({1: 0, -1: 1})
+    df["anomaly"] = model.predict(X_scaled)
+    df["anomaly"] = df["anomaly"].apply(lambda x: 1 if x == -1 else 0)
 
+    # =========================
+    # Metrics
+    # =========================
+    anomaly_count = df["anomaly"].sum()
     total = len(df)
-    anomalies = int(df['anomaly'].sum())
-    normal = total - anomalies
-    rate = (anomalies / total) * 100
+    rate = (anomaly_count / total) * 100
 
-    st.subheader("Detection Summary")
+    col1, col2, col3 = st.columns(3)
 
-    c1, c2, c3, c4 = st.columns(4)
-    c1.metric("Total Transactions", total)
-    c2.metric("Suspicious", anomalies)
-    c3.metric("Normal", normal)
-    c4.metric("Anomaly Rate (%)", f"{rate:.2f}")
+    col1.metric("Total Transactions", total)
+    col2.metric("Detected Anomalies", anomaly_count)
+    col3.metric("Anomaly Rate (%)", f"{rate:.2f}")
 
-    st.markdown("---")
+    # =========================
+    # Suspicious Transactions
+    # =========================
+    st.subheader("⚠ Detected Suspicious Transactions")
+    suspicious = df[df["anomaly"] == 1]
 
-    st.subheader("Detected Suspicious Transactions")
-
-    flagged = df[df['anomaly'] == 1]
-
-    if len(flagged) > 0:
-        st.dataframe(flagged.head(50), use_container_width=True)
+    if len(suspicious) > 0:
+        st.dataframe(suspicious.head(200))
     else:
         st.success("No suspicious transactions detected.")
 
-    st.markdown("---")
-
+    # =========================
+    # Distribution Chart
+    # =========================
     st.subheader("Anomaly Distribution")
 
-    fig, ax = plt.subplots()
-    df['anomaly'].value_counts().plot(kind='bar', ax=ax)
-    ax.set_xticklabels(["Normal", "Anomaly"], rotation=0)
-    st.pyplot(fig)
+    fig = px.histogram(df, x="anomaly", nbins=2)
+    st.plotly_chart(fig, use_container_width=True)
 
-# ---------------- FOOTER ----------------
-st.markdown("""
-<div class='footer'>
-© 2026 SecurePay | Intelligent Transaction Monitoring System<br>
-Academic Research Prototype — Developed by Mehul Kumar
-</div>
-""", unsafe_allow_html=True)
+    # =========================
+    # Scatter Behaviour Map
+    # =========================
+    st.subheader("Behaviour Analysis")
+
+    fig2 = px.scatter(
+        df.sample(min(5000, len(df))),
+        x="amount_deviation",
+        y="txn_velocity",
+        color="anomaly",
+        title="Deviation vs Velocity"
+    )
+
+    st.plotly_chart(fig2, use_container_width=True)
+
+else:
+    st.info("Upload a CSV file to begin anomaly detection.")
+
+# =========================
+# Footer
+# =========================
+st.markdown("---")
+st.markdown("© 2026 SecurePay | Financial Anomaly Detection Prototype")
