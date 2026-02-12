@@ -1,0 +1,12 @@
+[client]
+maxUploadSize = 500
+
+[logger]
+level = "info"
+
+[theme]
+primaryColor = "#4da6ff"
+backgroundColor = "#0e1117"
+secondaryBackgroundColor = "#161b22"
+textColor = "#ffffff"
+font = "sans serif"
