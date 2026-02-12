@@ -72,7 +72,7 @@ if uploaded_file is not None:
 
     model = IsolationForest(
         n_estimators=100,
-        contamination=0.015,
+        contamination=auto,
         random_state=42
     )
 
