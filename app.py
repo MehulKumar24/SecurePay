@@ -45,7 +45,7 @@ html, body, [class*="css"] {
 """, unsafe_allow_html=True)
 
 # ---------- HEADER ----------
-st.markdown('<div class="title">SecurePay</div>', unsafe_allow_html=True)
+st.markdown('<div class="title" style="color:#3b82f6;">SecurePay</div>', unsafe_allow_html=True)
 st.markdown('<div class="subtitle">Intelligent Financial Anomaly Detection System</div>', unsafe_allow_html=True)
 
 file = st.file_uploader("Upload Transaction Dataset (CSV)", type=["csv"])
@@ -64,7 +64,8 @@ if file is not None:
     df["raw_amount_deviation"] = df["amount_deviation"]
 
     # ---------- MODEL ----------
-    X = df[required_cols].fillna(df.median())
+    X = df[required_cols].apply(pd.to_numeric, errors="coerce")
+X = X.fillna(X.median())
     scaler = StandardScaler()
     X_scaled = scaler.fit_transform(X)
 
