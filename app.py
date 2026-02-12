@@ -155,7 +155,7 @@ if file is not None:
     if not suspicious.empty:
         st.dataframe(
             suspicious.sort_values("risk_score", ascending=False).head(300),
-            use_container_width=True
+            width="stretch"
         )
 
         csv = suspicious.to_csv(index=False).encode("utf-8")
@@ -168,7 +168,7 @@ if file is not None:
     st.markdown("---")
     st.subheader("Anomaly Distribution")
     fig1 = px.histogram(df, x="real_anomaly", template="plotly_dark")
-    st.plotly_chart(fig1, use_container_width=True)
+    st.plotly_chart(fig1, width="stretch")
 
     st.markdown("---")
     st.subheader("Behaviour Analysis")
@@ -181,13 +181,13 @@ if file is not None:
         template="plotly_dark",
         opacity=0.7
     )
-    st.plotly_chart(fig2, use_container_width=True)
+    st.plotly_chart(fig2, width="stretch")
 
     # -------- TOP RISK (FIXED: HIGH → LOW) --------
     st.markdown("---")
     st.subheader("Top Risk Transactions (High → Low)")
     top_risk = df.sort_values("risk_score", ascending=False).head(20)
-    st.dataframe(top_risk, use_container_width=True)
+    st.dataframe(top_risk, width="stretch")
 
 else:
     st.info("Upload a CSV file to begin analysis.")
