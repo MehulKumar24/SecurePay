@@ -76,7 +76,7 @@ st.markdown(
         color: #e5edf6;
     }
     .block-container {
-        padding-top: 1.2rem;
+        padding-top: 4.1rem;
         padding-bottom: 1.2rem;
     }
     .title {
@@ -91,7 +91,8 @@ st.markdown(
     }
     @media (max-width: 640px) {
         .block-container {
-            padding-top: 0.8rem;
+            padding-top: 3.4rem;
+            padding-bottom: 0.9rem;
         }
         .title {
             margin-bottom: 0.5rem;
@@ -271,7 +272,10 @@ def load_demo_data() -> pd.DataFrame:
 
 st.markdown("<div class='title'>SecurePay Risk Console</div>", unsafe_allow_html=True)
 if not PLOTLY_AVAILABLE:
-    st.warning("Interactive charts are in fallback mode. Install `plotly` for full chart experience.")
+    st.warning(
+        "Interactive charts are in fallback mode because `plotly` is unavailable in this runtime. "
+        "Install `plotly` and reboot/redeploy the app for full chart experience."
+    )
 if not MATPLOTLIB_AVAILABLE:
     st.info("PDF export is disabled. Install `matplotlib` to enable executive PDF snapshots.")
 
