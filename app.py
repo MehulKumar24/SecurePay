@@ -12,24 +12,28 @@ px: Any = None
 go: Any = None
 plt: Any = None
 PdfPages: Any = None
+PLOTLY_IMPORT_ERROR: Optional[str] = None
+MATPLOTLIB_IMPORT_ERROR: Optional[str] = None
 
 try:
     px = importlib.import_module("plotly.express")
     go = importlib.import_module("plotly.graph_objects")
     PLOTLY_AVAILABLE = True
-except ModuleNotFoundError:
+except Exception as exc:
     px = None
     go = None
     PLOTLY_AVAILABLE = False
+    PLOTLY_IMPORT_ERROR = f"{type(exc).__name__}: {exc}"
 
 try:
     plt = importlib.import_module("matplotlib.pyplot")
     PdfPages = importlib.import_module("matplotlib.backends.backend_pdf").PdfPages
     MATPLOTLIB_AVAILABLE = True
-except ModuleNotFoundError:
+except Exception as exc:
     plt = None
     PdfPages = None
     MATPLOTLIB_AVAILABLE = False
+    MATPLOTLIB_IMPORT_ERROR = f"{type(exc).__name__}: {exc}"
 
 REQUIRED_COLUMNS = [
     "txn_id",
@@ -284,8 +288,12 @@ if not PLOTLY_AVAILABLE:
         "Interactive charts are in fallback mode because `plotly` is unavailable in this runtime. "
         "Install `plotly` and reboot/redeploy the app for full chart experience."
     )
+    if PLOTLY_IMPORT_ERROR:
+        st.caption(f"Plotly import error: `{PLOTLY_IMPORT_ERROR}`")
 if not MATPLOTLIB_AVAILABLE:
     st.info("PDF export is disabled. Install `matplotlib` to enable executive PDF snapshots.")
+    if MATPLOTLIB_IMPORT_ERROR:
+        st.caption(f"Matplotlib import error: `{MATPLOTLIB_IMPORT_ERROR}`")
 
 with st.sidebar:
     st.markdown("### Control Center")
