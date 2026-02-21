@@ -265,6 +265,14 @@ def build_pdf_snapshot(metrics: Dict[str, str], risk_values: pd.Series) -> Optio
     return pdf_buffer.getvalue()
 
 
+def render_plotly(fig: Any) -> None:
+    # Keep compatibility with both newer (width) and older (use_container_width-only) Streamlit versions.
+    try:
+        st.plotly_chart(fig, width="stretch", config=PLOT_CONFIG)
+    except TypeError:
+        st.plotly_chart(fig, use_container_width=True, config=PLOT_CONFIG)
+
+
 @st.cache_data(show_spinner=False)
 def load_demo_data() -> pd.DataFrame:
     return pd.read_csv("securepay_txn_demo.csv")
@@ -611,7 +619,7 @@ with tab_exec:
                 font_color="#e5edf6",
                 legend_title_text="Severity",
             )
-            st.plotly_chart(risk_dist, width="stretch", config=PLOT_CONFIG)
+            render_plotly(risk_dist)
 
         with right:
             hourly = (
@@ -637,7 +645,7 @@ with tab_exec:
                 plot_bgcolor="rgba(0,0,0,0)",
                 font_color="#e5edf6",
             )
-            st.plotly_chart(hourly_fig, width="stretch", config=PLOT_CONFIG)
+            render_plotly(hourly_fig)
 
         left, right = st.columns(2)
         with left:
@@ -664,7 +672,7 @@ with tab_exec:
                 xaxis_title="Payment Channel",
                 yaxis_title="Transaction Count",
             )
-            st.plotly_chart(channel_fig, width="stretch", config=PLOT_CONFIG)
+            render_plotly(channel_fig)
 
         with right:
             box_fig = px.box(
@@ -685,7 +693,7 @@ with tab_exec:
                 yaxis_title="Transaction Amount",
                 showlegend=False,
             )
-            st.plotly_chart(box_fig, width="stretch", config=PLOT_CONFIG)
+            render_plotly(box_fig)
 
 with tab_ops:
     if not PLOTLY_AVAILABLE:
@@ -744,7 +752,7 @@ with tab_ops:
                 plot_bgcolor="rgba(0,0,0,0)",
                 font_color="#e5edf6",
             )
-            st.plotly_chart(funnel_fig, width="stretch", config=PLOT_CONFIG)
+            render_plotly(funnel_fig)
 
         with right:
             heatmap_data = (
@@ -771,7 +779,7 @@ with tab_ops:
                 plot_bgcolor="rgba(0,0,0,0)",
                 font_color="#e5edf6",
             )
-            st.plotly_chart(heatmap_fig, width="stretch", config=PLOT_CONFIG)
+            render_plotly(heatmap_fig)
 
         left, right = st.columns(2)
         with left:
@@ -805,7 +813,7 @@ with tab_ops:
                     yaxis2=dict(title="Cumulative %", overlaying="y", side="right", range=[0, 100]),
                     legend=dict(orientation="h"),
                 )
-                st.plotly_chart(pareto_fig, width="stretch", config=PLOT_CONFIG)
+                render_plotly(pareto_fig)
 
         with right:
             exposure = suspicious_value
@@ -833,7 +841,7 @@ with tab_ops:
                 font_color="#e5edf6",
                 yaxis_title="Amount",
             )
-            st.plotly_chart(waterfall_fig, width="stretch", config=PLOT_CONFIG)
+            render_plotly(waterfall_fig)
 
 with tab_model:
     left, right = st.columns(2)
@@ -876,7 +884,7 @@ with tab_model:
                 plot_bgcolor="rgba(0,0,0,0)",
                 font_color="#e5edf6",
             )
-            st.plotly_chart(cm_fig, width="stretch", config=PLOT_CONFIG)
+            render_plotly(cm_fig)
 
         with right:
             if true_y.nunique() <= 1:
@@ -916,7 +924,7 @@ with tab_model:
                     xaxis_title="Recall",
                     yaxis_title="Precision",
                 )
-                st.plotly_chart(pr_fig, width="stretch", config=PLOT_CONFIG)
+                render_plotly(pr_fig)
 
         drift_fig = px.line(
             drift_data,
@@ -933,7 +941,7 @@ with tab_model:
             plot_bgcolor="rgba(0,0,0,0)",
             font_color="#e5edf6",
         )
-        st.plotly_chart(drift_fig, width="stretch", config=PLOT_CONFIG)
+        render_plotly(drift_fig)
 
     model_health_row = st.columns(4)
     model_health_row[0].metric("Model Contamination", str(contamination))
