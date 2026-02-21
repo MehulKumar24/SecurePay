@@ -292,7 +292,8 @@ with st.sidebar:
 
     st.markdown("---")
     st.markdown("### Model Tuning")
-    contamination = st.slider("Contamination", min_value=0.005, max_value=0.10, value=0.015, step=0.005)
+    contamination: Any = "auto"
+    st.caption("Contamination is fixed to auto mode.")
     n_estimators = st.slider("Estimators", min_value=50, max_value=400, value=180, step=10)
     risk_threshold = st.slider("High-risk score threshold", min_value=50, max_value=99, value=82, step=1)
     random_seed = st.number_input("Random seed", min_value=1, max_value=9999, value=42, step=1)
@@ -935,7 +936,7 @@ with tab_model:
         st.plotly_chart(drift_fig, width="stretch", config=PLOT_CONFIG)
 
     model_health_row = st.columns(4)
-    model_health_row[0].metric("Model Contamination", f"{contamination:.3f}")
+    model_health_row[0].metric("Model Contamination", str(contamination))
     model_health_row[1].metric("Current Risk Threshold", str(risk_threshold))
     model_health_row[2].metric("Latest Drift Score", f"{drift_latest:.3f}")
     model_health_row[3].metric("Normal Transactions", f"{normal_count:,}")
