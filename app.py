@@ -1001,8 +1001,8 @@ with tab_cases:
 st.markdown(
     """
     <div class='footer'>
-        (c) 2026 SecurePay | Intelligent Transaction Monitoring System<br>
-        Academic Research Prototype - Developed by Mehul Kumar
+        &copy 2026 SecurePay | Intelligent Transaction Monitoring System<br>
+        Research Prototype - Developed by Mehul Kumaar
     </div>
     """,
     unsafe_allow_html=True,
