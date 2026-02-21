@@ -80,15 +80,22 @@ st.markdown(
         padding-bottom: 1.2rem;
     }
     .title {
-        font-size: 2.15rem;
+        font-size: clamp(1.35rem, 3.8vw, 2.15rem);
         font-weight: 760;
         color: #f8fafc;
-        line-height: 1.1;
-        margin-bottom: 0.2rem;
+        line-height: 1.2;
+        margin-bottom: 0.7rem;
+        max-width: 100%;
+        overflow-wrap: anywhere;
+        word-break: break-word;
     }
-    .subtitle {
-        color: #9fb1c7;
-        margin-bottom: 1rem;
+    @media (max-width: 640px) {
+        .block-container {
+            padding-top: 0.8rem;
+        }
+        .title {
+            margin-bottom: 0.5rem;
+        }
     }
     .ticker {
         width: 100%;
@@ -263,10 +270,6 @@ def load_demo_data() -> pd.DataFrame:
 
 
 st.markdown("<div class='title'>SecurePay Risk Console</div>", unsafe_allow_html=True)
-st.markdown(
-    "<div class='subtitle'>Bank-style anomaly monitoring with high-contrast dark UI, model health, and case operations.</div>",
-    unsafe_allow_html=True,
-)
 if not PLOTLY_AVAILABLE:
     st.warning("Interactive charts are in fallback mode. Install `plotly` for full chart experience.")
 if not MATPLOTLIB_AVAILABLE:
