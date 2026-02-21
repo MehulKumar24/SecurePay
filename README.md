@@ -1,141 +1,108 @@
-# SecurePay — Intelligent Financial Anomaly Detection
+# SecurePay - Bank-Style Transaction Anomaly Monitoring
 
-SecurePay is a behavioral anomaly detection system designed to identify suspicious financial transaction patterns using unsupervised machine learning. The system analyzes transaction behavior instead of relying on fixed fraud rules, enabling adaptive and data-driven anomaly detection.
+SecurePay is a Streamlit-based anomaly detection dashboard for financial transactions.  
+It uses behavioral features and an Isolation Forest model to flag suspicious patterns and present results in an operations-style monitoring console.
 
-This project demonstrates how anomaly detection models can be applied to financial behavioral data and deployed through an interactive web application.
+## What This App Does
 
----
+- Ingests transaction CSV data from upload or demo dataset
+- Validates a fixed 8-column schema
+- Scores transactions with Isolation Forest
+- Generates risk score, severity, and high-risk flags
+- Shows executive, operations, model-health, and case views
+- Exports scored data, suspicious cases, and executive PDF snapshot
 
-## Overview
+## Fixed Input Schema (Required)
 
-SecurePay detects unusual transaction behavior using machine learning models such as Isolation Forest and Local Outlier Factor (LOF). The system focuses on behavioral indicators including transaction amount deviation, transaction velocity, and behavioral scoring rather than predefined fraud rules.
+Your dataset must include exactly these columns:
 
-The application is built using Streamlit and provides an interactive interface for uploading datasets, running anomaly detection, and visualizing suspicious transactions.
+1. `txn_id`
+2. `txn_hour`
+3. `txn_amount`
+4. `amount_deviation`
+5. `txn_velocity`
+6. `behavior_score`
+7. `payment_channel`
+8. `risk_flag`
 
----
+The app is intentionally schema-locked to this structure so datasets with the same columns work consistently.
 
-## Key Features
+## Dashboard Structure
 
-* Behavioral anomaly detection using Isolation Forest
-* Clean and interactive Streamlit web interface
-* Real-time detection on uploaded datasets
-* Suspicious transaction highlighting
-* Detection summary and anomaly rate
-* Visualization of anomaly distribution
-* Modular notebook-based workflow
-* Fully deployable on Streamlit Cloud
+- `Executive` tab:
+  - Risk score distribution
+  - Hourly suspicious trend vs normal baseline
+  - Channel anomaly breakdown
+  - Amount by severity
+- `Risk Operations` tab:
+  - Alert funnel
+  - Channel-hour risk heatmap
+  - Top risky transactions (Pareto)
+  - Potential vs prevented loss view
+- `Model Health` tab:
+  - Confusion matrix
+  - Precision-recall curve
+  - Drift trend
+  - Threshold and contamination status
+- `Case Console` tab:
+  - High-risk queue
+  - Manager/Analyst views
+  - Drill-down with reason codes
 
----
+## Key Metrics Available
 
-## Project Structure
+- Total transactions and total transaction value
+- Suspicious count, suspicious value, high-risk rate
+- Blocked suspicious count and estimated prevented loss
+- Precision, recall, false positive rate
+- Open alerts, open cases
+- Average and P95 estimated detection latency
+- Data quality score
 
-```
-SecurePay/
-│
-├── app.py                          # Streamlit web application
-├── requirements.txt                # Dependencies for deployment
-├── securepay_txn_stream.csv        # Sample dataset
-│
-├── notebooks/
-│   ├── 01_transaction_landscape_analysis.ipynb
-│   ├── 02_behavioral_feature_preparation.ipynb
-│   ├── 03_isolation_forest_anomaly_detection.ipynb
-│   ├── 04_lof_and_model_evaluation.ipynb
-│   └── 05_precision_recall_and_threshold.ipynb
-│
-├── LICENSE
-└── README.md
-```
+## Exports
 
----
+- `securepay_scored_transactions.csv`
+- `securepay_suspicious_transactions.csv`
+- `securepay_executive_snapshot.pdf` (when matplotlib is available)
 
-## Dataset Description
+## Install
 
-The model expects behavioral transaction data with the following columns:
-
-* **txn_hour** — Hour of transaction (0–23)
-* **txn_amount** — Transaction amount
-* **amount_deviation** — Deviation from user’s normal spending
-* **txn_velocity** — Frequency of transactions in a short time window
-* **behavior_score** — Normalized behavioral risk indicator
-
-Synthetic datasets can be generated for testing using tools such as Mockaroo or obtained from open financial datasets.
-
----
-
-## How It Works
-
-1. Transaction behavioral data is loaded.
-2. Behavioral features are extracted.
-3. Isolation Forest identifies anomalous patterns.
-4. Suspicious transactions are flagged.
-5. Detection metrics and visualization are produced.
-6. Results are displayed through the Streamlit web interface.
-
----
-
-## Running the Application
-
-### Local Run
-
-Install dependencies:
-
-```
+```bash
 pip install -r requirements.txt
 ```
 
-Run the application:
+## Run
 
-```
+```bash
 streamlit run app.py
 ```
 
----
+## Dependency Notes
 
-### Streamlit Cloud Deployment
+- `plotly` is used for interactive charts.
+- `matplotlib` is used for PDF snapshot export.
+- If one of these is missing, the app does not crash:
+  - chart/table fallbacks are shown when `plotly` is unavailable
+  - PDF export is disabled when `matplotlib` is unavailable
 
-1. Upload project to GitHub
-2. Go to https://share.streamlit.io
-3. Deploy using:
+## Project Files
 
-   * Repository → SecurePay
-   * Branch → main
-   * File → app.py
-
-The app will run directly in the browser.
-
----
-
-## Technologies Used
-
-* Python
-* Streamlit
-* Pandas & NumPy
-* Scikit-learn
-* Matplotlib
-
----
-
-## Academic Purpose
-
-This project is developed as an academic demonstration of anomaly detection techniques applied to financial behavioral data. It is intended for learning, experimentation, and research purposes only.
-
----
-
-## Author
-
-Mehul Kumar
-Academic Project — Intelligent Anomaly Detection System
-
----
+- `app.py`: Streamlit application
+- `requirements.txt`: Python dependencies
+- `securepay_txn_demo.csv`: Demo dataset
+- `securepay_txn_stream.csv`: Sample stream-like dataset
+- notebooks:
+  - `01_transaction_landscape_analysis.ipynb`
+  - `02_behavioral_feature_preparation.ipynb`
+  - `03_isolation_forest_anomaly_detection.ipynb`
+  - `04_lof_and_model_evaluation.ipynb`
+  - `05_precision_recall_and_threshold.ipynb`
 
 ## License
 
-This project is licensed under the Apache 2.0 License.
+Apache 2.0 (see `LICENSE.txt`).
 
----
+## Author
 
-## Copyright
-
-© 2026 SecurePay — Intelligent Financial Anomaly Detection
-All rights reserved. This project is developed for academic and research demonstration purposes.
+Mehul Kumar  
+Academic project - Intelligent anomaly detection system.
