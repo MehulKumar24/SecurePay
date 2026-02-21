@@ -1002,7 +1002,7 @@ st.markdown(
     """
     <div class='footer'>
         &copy 2026 SecurePay | Intelligent Transaction Monitoring System<br>
-        Research Prototype - Developed by Mehul Kumaar
+        Research Prototype - Developed by Mehul Kumar
     </div>
     """,
     unsafe_allow_html=True,
